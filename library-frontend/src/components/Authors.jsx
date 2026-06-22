@@ -50,11 +50,19 @@ const Authors = props => {
         <div>
           <label>
             name
-            <input
-              type='text'
+            <select
               value={name}
               onChange={({ target }) => setName(target.value)}
-            />
+            >
+              {authors.map(a => (
+                <option
+                  key={a.id}
+                  value={a.name}
+                >
+                  {a.name}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
         <div>
