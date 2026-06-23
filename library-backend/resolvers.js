@@ -7,19 +7,32 @@ const resolvers = {
   Query: {
     bookCount: async () => Book.collection.countDocuments(),
     authorCount: async () => Author.collection.countDocuments(),
+    allAuthors: async () => Author.find({}),
     allBooks: async (root, args) => {
-      // if (args.author && args.genre) {
-      //   return books.filter(
-      //     b => b.author === args.author && b.genres.includes(args.genre)
-      //   )
-      // } else if (args.author) {
-      //   return books.filter(b => b.author === args.author)
-      // } else if (args.genre) {
-      //   return books.filter(b => b.genres.includes(args.genre))
-      // }
-      return Book.find({}).populate('author')
-    },
-    allAuthors: async () => Author.find({})
+      let book, author
+
+      if (args.author) {
+        author = await Author.findOne({ name: args.author })
+      }
+
+      if (args.author && args.genre) {
+        book = Book.find({
+          author: author._id,
+          genres: args.genre
+        })
+      } else if (args.author) {
+        book = Book.find({
+          author: author._id
+        })
+      } else if (args.genre) {
+        book = Book.find({
+          genres: args.genre
+        })
+      } else {
+        book = Book.find({})
+      }
+      return book.populate('author')
+    }
   },
   Mutation: {
     addBook: async (root, args) => {
@@ -59,14 +72,15 @@ const resolvers = {
 
       return (await newBook.save()).populate('author')
     },
-    editAuthor: (root, args) => {
-      // const author = authors.find(a => a.name === args.name)
-      // if (!author) {
-      //   return null
-      // }
-      // const updatedAuthor = { ...author, born: args.setBornTo }
-      // authors = authors.map(a => (a.name === author.name ? updatedAuthor : a))
-      // return updatedAuthor
+    editAuthor: async (root, args) => {
+      const author = await Author.findOne({ name: args.name })
+
+      if (!author) {
+        return null
+      }
+
+      author.born = args.setBornTo
+      return author.save()
     }
   }
 }
