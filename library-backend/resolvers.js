@@ -31,6 +31,7 @@ const resolvers = {
       } else {
         book = Book.find({})
       }
+
       return book.populate('author')
     }
   },
@@ -45,7 +46,17 @@ const resolvers = {
           name: args.author,
           born: null
         })
-        await author.save()
+
+        try {
+          await author.save()
+        } catch (error) {
+          throw new GraphQLError(`Saving author failed: ${error.message}`, {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+              error
+            }
+          })
+        }
       }
 
       const book = await Book.findOne({
@@ -59,7 +70,8 @@ const resolvers = {
           {
             extensions: {
               code: 'BAD_USER_INPUT',
-              invalidArgs: [book.title, book.author]
+              invalidArgs: [book.title, book.author],
+              error
             }
           }
         )
@@ -70,7 +82,19 @@ const resolvers = {
         author: author._id
       })
 
-      return (await newBook.save()).populate('author')
+      try {
+        await newBook.save()
+        await newBook.populate('author')
+      } catch (error) {
+        throw new GraphQLError(`Saving book failed: ${error.message}`, {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            error
+          }
+        })
+      }
+
+      return newBook
     },
     editAuthor: async (root, args) => {
       const author = await Author.findOne({ name: args.name })
@@ -80,7 +104,20 @@ const resolvers = {
       }
 
       author.born = args.setBornTo
-      return author.save()
+
+      try {
+        await author.save()
+      } catch (error) {
+        throw new GraphQLError(`Updating author failed: ${error.message}`, {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args.setBornTo,
+            error
+          }
+        })
+      }
+
+      return author
     }
   }
 }
