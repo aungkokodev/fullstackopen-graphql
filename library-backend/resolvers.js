@@ -1,7 +1,8 @@
-const { v1: uuid } = require('uuid')
+const jwt = require('jsonwebtoken')
 const { GraphQLError } = require('graphql/error')
 const Author = require('./models/author')
 const Book = require('./models/book')
+const User = require('./models/user')
 
 const resolvers = {
   Query: {
@@ -33,10 +34,19 @@ const resolvers = {
       }
 
       return book.populate('author')
-    }
+    },
+    me: async (root, args, context) => context.currentUser
   },
   Mutation: {
-    addBook: async (root, args) => {
+    addBook: async (root, args, context) => {
+      if (!context.currentUser) {
+        throw new GraphQLError('Not authenticated', {
+          extensions: {
+            code: 'UNAUTHENTICATED'
+          }
+        })
+      }
+
       let author = await Author.findOne({
         name: args.author
       })
@@ -96,7 +106,16 @@ const resolvers = {
 
       return newBook
     },
-    editAuthor: async (root, args) => {
+
+    editAuthor: async (root, args, context) => {
+      if (!context.currentUser) {
+        throw new GraphQLError('Not authenticated', {
+          extensions: {
+            code: 'UNAUTHENTICATED'
+          }
+        })
+      }
+
       const author = await Author.findOne({ name: args.name })
 
       if (!author) {
@@ -118,6 +137,72 @@ const resolvers = {
       }
 
       return author
+    },
+
+    createUser: async (root, args) => {
+      if (!args.username || !args.favoriteGenre) {
+        throw new GraphQLError(
+          `Both username and favorite genre must not be empty`,
+          {
+            extensions: {
+              code: 'BAD_USER_INPUT'
+            }
+          }
+        )
+      }
+
+      const username = args.username.toLowerCase()
+      const favoriteGenre = args.favoriteGenre.toLowerCase()
+
+      const userExists = await User.exists({ username: username })
+      if (userExists) {
+        throw new GraphQLError(`username already exists: ${username}`, {
+          extensions: {
+            code: 'BAD_USER_INPUT'
+          }
+        })
+      }
+
+      const newUser = new User({
+        username,
+        favoriteGenre
+      })
+
+      return await newUser.save().catch(error => {
+        throw new GraphQLError(`Saving user failed: ${error.message}`, {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            error
+          }
+        })
+      })
+    },
+
+    login: async (root, args) => {
+      if (!args.username || !args.password) {
+        throw new GraphQLError('Both username and password are required', {
+          extensions: {
+            code: 'BAD_USER_INPUT'
+          }
+        })
+      }
+
+      const username = args.username.toLowerCase()
+
+      const user = await User.findOne({ username: args.username })
+
+      if (!user || args.password !== 'password') {
+        return null
+      }
+
+      const userForToken = {
+        id: user._id,
+        username: user.username
+      }
+
+      const token = jwt.sign(userForToken, process.env.JWT_SECRET)
+
+      return { value: token }
     }
   }
 }
