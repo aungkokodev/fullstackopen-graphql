@@ -191,8 +191,12 @@ const resolvers = {
 
       const user = await User.findOne({ username: args.username })
 
-      if (!user || args.password !== 'password') {
-        return null
+      if (!user || args.password !== 'secret') {
+        throw new GraphQLError('wrong username or password', {
+          extensions: {
+            code: 'UNAUTHENTICATED'
+          }
+        })
       }
 
       const userForToken = {
@@ -203,6 +207,16 @@ const resolvers = {
       const token = jwt.sign(userForToken, process.env.JWT_SECRET)
 
       return { value: token }
+    },
+
+    _resetDatabase: async () => {
+      if (process.env.NODE_ENV !== 'test') {
+        throw new GraphQLError('_resetDatabase is only available in test mode')
+      }
+      await Author.deleteMany({})
+      await Book.deleteMany({})
+      await User.deleteMany({})
+      return true
     }
   }
 }
