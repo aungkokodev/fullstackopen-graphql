@@ -80,8 +80,7 @@ const resolvers = {
           {
             extensions: {
               code: 'BAD_USER_INPUT',
-              invalidArgs: [book.title, book.author],
-              error
+              invalidArgs: [book.title, book.author]
             }
           }
         )
