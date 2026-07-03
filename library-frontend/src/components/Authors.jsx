@@ -55,10 +55,7 @@ const Authors = props => {
               onChange={({ target }) => setName(target.value)}
             >
               {authors.map(a => (
-                <option
-                  key={a.id}
-                  value={a.name}
-                >
+                <option key={a.id} value={a.name}>
                   {a.name}
                 </option>
               ))}
