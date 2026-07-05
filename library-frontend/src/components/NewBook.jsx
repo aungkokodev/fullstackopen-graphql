@@ -38,6 +38,7 @@ const NewBook = props => {
 
   return (
     <div>
+      <h2>add new book</h2>
       <form onSubmit={submit}>
         <div>
           <label>
@@ -75,10 +76,7 @@ const NewBook = props => {
               onChange={({ target }) => setGenre(target.value)}
             />
           </label>
-          <button
-            onClick={addGenre}
-            type='button'
-          >
+          <button onClick={addGenre} type='button'>
             add genre
           </button>
         </div>
