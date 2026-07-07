@@ -53,6 +53,7 @@ const Authors = props => {
                 name
                 <select
                   value={name}
+                  name='name'
                   onChange={({ target }) => setName(target.value)}
                 >
                   {authors.map(a => (

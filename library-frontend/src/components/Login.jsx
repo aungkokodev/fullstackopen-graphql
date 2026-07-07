@@ -5,12 +5,17 @@ import { LOGIN } from '../queries'
 const Login = ({ show, onSuccess }) => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
   const [login] = useMutation(LOGIN, {
     onCompleted: data => {
       const token = data.login.value
       setUsername('')
       setPassword('')
+      setError('')
       onSuccess(token)
+    },
+    onError: () => {
+      setError('login failed')
     }
   })
 
@@ -26,10 +31,11 @@ const Login = ({ show, onSuccess }) => {
   return (
     <div>
       <h2>Login</h2>
+      {error && <p>{error}</p>}
       <form onSubmit={handleSubmit}>
         <div>
           <label>
-            name
+            username
             <input
               type='text'
               value={username}
