@@ -9,7 +9,8 @@ const Books = props => {
     skip: !props.show,
     variables: {
       genre: filter
-    }
+    },
+    fetchPolicy: 'cache-and-network'
   })
 
   if (!props.show) {
