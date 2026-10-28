@@ -10,7 +10,7 @@ const BOOK_DETAILS = gql`
       id
       name
       born
-      # bookCount
+      bookCount
     }
   }
 `
@@ -21,7 +21,7 @@ export const ALL_AUTHORS = gql`
       id
       name
       born
-      # bookCount
+      bookCount
     }
   }
 `

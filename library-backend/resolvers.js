@@ -12,7 +12,7 @@ const resolvers = {
   Query: {
     bookCount: async () => Book.collection.countDocuments(),
     authorCount: async () => Author.collection.countDocuments(),
-    allAuthors: async () => Author.find({}),
+    allAuthors: async () => Author.find({}).populate('books'),
     allBooks: async (root, args) => {
       let book, author
 
@@ -40,6 +40,14 @@ const resolvers = {
       return book.populate('author')
     },
     me: async (root, args, context) => context.currentUser
+  },
+  Author: {
+    bookCount: async author => {
+      if (!author.books) {
+        return await Book.countDocuments({ author: author._id })
+      }
+      return author.books ? author.books.length : 0
+    }
   },
   Mutation: {
     addBook: async (root, args, context) => {
