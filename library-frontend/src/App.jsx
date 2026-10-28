@@ -1,4 +1,4 @@
-import { useSubscription } from '@apollo/client/react'
+import { useApolloClient, useSubscription } from '@apollo/client/react'
 import { useState } from 'react'
 import { Toaster, toast } from 'react-hot-toast'
 import Authors from './components/Authors'
@@ -7,10 +7,13 @@ import Login from './components/Login'
 import NewBook from './components/NewBook'
 import Recommend from './components/Recommend'
 import { BOOK_ADDED } from './queries'
+import { addBookToCache } from './utils/ApolloCache'
 
 const App = () => {
   const [page, setPage] = useState('authors')
   const [token, setToken] = useState(localStorage.getItem('auth-token'))
+
+  const client = useApolloClient()
 
   const handleLogin = token => {
     setToken(token)
@@ -27,13 +30,15 @@ const App = () => {
   useSubscription(BOOK_ADDED, {
     onData: ({ data }) => {
       const newBook = data?.data?.bookAdded
-      if (newBook)
+      if (newBook) {
+        addBookToCache(client.cache, newBook)
         toast.success(
           `NEW BOOK ${newBook.title} by ${newBook.author.name} ADDED`,
           {
             duration: 5000
           }
         )
+      }
     }
   })
 
