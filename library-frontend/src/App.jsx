@@ -1,9 +1,12 @@
+import { useSubscription } from '@apollo/client/react'
 import { useState } from 'react'
+import { Toaster, toast } from 'react-hot-toast'
 import Authors from './components/Authors'
 import Books from './components/Books'
 import Login from './components/Login'
 import NewBook from './components/NewBook'
 import Recommend from './components/Recommend'
+import { BOOK_ADDED } from './queries'
 
 const App = () => {
   const [page, setPage] = useState('authors')
@@ -20,6 +23,19 @@ const App = () => {
     localStorage.removeItem('auth-token')
     setPage('authors')
   }
+
+  useSubscription(BOOK_ADDED, {
+    onData: ({ data }) => {
+      const newBook = data?.data?.bookAdded
+      if (newBook)
+        toast.success(
+          `NEW BOOK ${newBook.title} by ${newBook.author.name} ADDED`,
+          {
+            duration: 5000
+          }
+        )
+    }
+  })
 
   return (
     <div>
@@ -40,6 +56,7 @@ const App = () => {
       <Recommend show={page === 'recommend'} />
       <NewBook show={page === 'add'} />
       <Login show={page === 'login'} onSuccess={handleLogin} />
+      <Toaster position='top-right' />
     </div>
   )
 }
